@@ -7,7 +7,14 @@
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" />
+        android:layout_centerInParent="true" >
+    </CalendarView>
+
+    <ListView
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/calendarView" >
+    </ListView>
 
 </RelativeLayout>
