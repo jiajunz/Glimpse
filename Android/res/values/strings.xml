@@ -3,5 +3,9 @@
     <string name="app_name">Glimpse</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_calendar">CalendarActivity</string>
+    <string name="new_entry">New Entry</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_entry_edit">EntryEditActivity</string>
+    <string name="save_entry">Save Entry</string>
 
 </resources>

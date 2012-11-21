@@ -10,11 +10,19 @@
         android:layout_centerInParent="true" >
     </CalendarView>
 
+    <Button
+        android:id="@+id/newEntryButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/calendarView"
+        android:layout_centerHorizontal="true"
+        android:text="@string/new_entry" />
+
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/calendarView" >
+        android:layout_below="@id/newEntryButton" >
     </ListView>
 
 </RelativeLayout>
