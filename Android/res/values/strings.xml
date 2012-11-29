@@ -8,5 +8,6 @@
     <string name="title_activity_entry_edit">EntryEditActivity</string>
     <string name="save_entry">Save Entry</string>
     <string name="show_entry">Show Entries</string>
+    <string name="take_img">Take Photo</string>
 
 </resources>

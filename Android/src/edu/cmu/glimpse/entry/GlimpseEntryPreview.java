@@ -1,5 +1,6 @@
 package edu.cmu.glimpse.entry;
 
+
 public class GlimpseEntryPreview {
 
     private final long mId;

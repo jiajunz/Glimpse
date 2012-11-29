@@ -14,11 +14,20 @@
         <requestFocus />
     </edu.cmu.glimpse.widget.UnderlinedEditText>
 
+    <ImageButton
+        android:id="@+id/imgButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/entryEditText"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/take_img"
+        android:src="@drawable/camera_icon" />
+
     <Button
         android:id="@+id/saveEntryButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/entryEditText"
+        android:layout_below="@id/imgButton"
         android:layout_centerHorizontal="true"
         android:text="@string/save_entry" />
 
