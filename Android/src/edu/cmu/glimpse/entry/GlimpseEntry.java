@@ -11,7 +11,7 @@ import android.os.Parcelable;
  */
 public class GlimpseEntry implements Parcelable {
 
-    private int mId;
+    private long mId;
     private long mCreate;
     private long mLastEdit;
     private String mContent;
@@ -29,7 +29,7 @@ public class GlimpseEntry implements Parcelable {
      * @param content
      *            content of the entry
      */
-    public GlimpseEntry(int id, long create, long lastEdit, String content) {
+    public GlimpseEntry(long id, long create, long lastEdit, String content) {
         mId = id;
         mCreate = create;
         mLastEdit = lastEdit;
@@ -51,7 +51,7 @@ public class GlimpseEntry implements Parcelable {
         }
     };
 
-    public int getId() {
+    public long getId() {
         return mId;
     }
 
@@ -76,14 +76,14 @@ public class GlimpseEntry implements Parcelable {
     }
 
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(mId);
+        dest.writeLong(mId);
         dest.writeLong(mCreate);
         dest.writeLong(mLastEdit);
         dest.writeString(mContent);
     }
 
     private void readFromParcel(Parcel in) {
-        mId = in.readInt();
+        mId = in.readLong();
         mCreate = in.readLong();
         mLastEdit = in.readLong();
         mContent = in.readString();

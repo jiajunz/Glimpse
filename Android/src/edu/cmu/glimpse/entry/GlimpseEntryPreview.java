@@ -2,12 +2,12 @@ package edu.cmu.glimpse.entry;
 
 public class GlimpseEntryPreview {
 
-    private final int mId;
+    private final long mId;
     private final GlimpseEntry mParent;
     private String mPreviewContent;
     private static final int PREVIEW_CONTENT_MAX_LENGTH = 40;
 
-    public GlimpseEntryPreview(int id, GlimpseEntry parent, String entryContent) {
+    public GlimpseEntryPreview(long id, GlimpseEntry parent, String entryContent) {
         mId = id;
         mParent = parent;
 
@@ -20,7 +20,7 @@ public class GlimpseEntryPreview {
         }
     }
 
-    public int getId() {
+    public long getId() {
         return mId;
     }
 

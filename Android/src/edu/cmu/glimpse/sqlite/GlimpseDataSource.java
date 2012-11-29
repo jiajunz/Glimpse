@@ -43,22 +43,13 @@ public class GlimpseDataSource {
         values.put(GlimpseSQLiteHelper.COLUMN_EDITED, System.currentTimeMillis());
         values.put(GlimpseSQLiteHelper.COLUMN_CONTENT, content);
         long insertId = mDatabase.insert(GlimpseSQLiteHelper.TABLE_ENTRY, null, values);
-        Cursor cursor = mDatabase.query(GlimpseSQLiteHelper.TABLE_ENTRY, mAllColumns, GlimpseSQLiteHelper.COLUMN_ID
-                + " = " + insertId, null, null, null, null);
-        cursor.moveToFirst();
-        GlimpseEntry newEntry = cursorToGlimpseEntry(cursor);
-        cursor.close();
-        return newEntry;
+        return getEntryWithId((int) insertId);
     }
 
-    public void updateEntry(int id, String content) {
+    public GlimpseEntry updateEntry(long id, String content) {
         Log.d(this.getClass().getName(), "Update entry id: " + id + " with: " + content);
 
-        Cursor cursor = mDatabase.query(GlimpseSQLiteHelper.TABLE_ENTRY, mAllColumns, GlimpseSQLiteHelper.COLUMN_ID
-                + " = " + id, null, null, null, null);
-        cursor.moveToFirst();
-        GlimpseEntry entry = cursorToGlimpseEntry(cursor);
-        cursor.close();
+        GlimpseEntry entry = getEntryWithId(id);
 
         ContentValues values = new ContentValues();
         values.put(GlimpseSQLiteHelper.COLUMN_CREATED, entry.getCreatedTime());
@@ -66,10 +57,12 @@ public class GlimpseDataSource {
         values.put(GlimpseSQLiteHelper.COLUMN_CONTENT, content);
 
         mDatabase.update(GlimpseSQLiteHelper.TABLE_ENTRY, values, GlimpseSQLiteHelper.COLUMN_ID + " = " + id, null);
+
+        return getEntryWithId(id);
     }
 
     public void deleteEntry(GlimpseEntry entry) {
-        int id = entry.getId();
+        long id = entry.getId();
         mDatabase.delete(GlimpseSQLiteHelper.TABLE_ENTRY, GlimpseSQLiteHelper.COLUMN_ID + " = " + id, null);
     }
 
@@ -108,7 +101,17 @@ public class GlimpseDataSource {
         return previews;
     }
 
+    private GlimpseEntry getEntryWithId(long id) {
+        Cursor cursor = mDatabase.query(GlimpseSQLiteHelper.TABLE_ENTRY, mAllColumns, GlimpseSQLiteHelper.COLUMN_ID
+                + " = " + id, null, null, null, null);
+        cursor.moveToFirst();
+        GlimpseEntry entry = cursorToGlimpseEntry(cursor);
+        cursor.close();
+
+        return entry;
+    }
+
     private GlimpseEntry cursorToGlimpseEntry(Cursor cursor) {
-        return new GlimpseEntry(cursor.getInt(0), cursor.getLong(1), cursor.getLong(2), cursor.getString(3));
+        return new GlimpseEntry(cursor.getLong(0), cursor.getLong(1), cursor.getLong(2), cursor.getString(3));
     }
 }
