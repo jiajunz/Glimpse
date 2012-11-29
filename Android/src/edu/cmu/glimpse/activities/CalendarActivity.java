@@ -21,11 +21,13 @@ import android.widget.RelativeLayout;
 import edu.cmu.glimpse.entry.GlimpseEntryPreview;
 import edu.cmu.glimpse.modules.EntryManageModule;
 import edu.cmu.glimpse.modules.IEntryManageModule;
+import edu.cmu.glimpse.sqlite.GlimpseDataSource;
 
 public class CalendarActivity extends Activity {
     private CalendarView mCalendarView;
     private Button mNewEntryButton;
     private ListView mListView;
+    private GlimpseDataSource mDataSource;
 
     private IEntryManageModule mEntryManageModule;
 
@@ -35,6 +37,7 @@ public class CalendarActivity extends Activity {
         setContentView(R.layout.activity_calendar);
 
         mEntryManageModule = EntryManageModule.getInstance();
+        mDataSource = new GlimpseDataSource(this);
 
         mCalendarView = (CalendarView) findViewById(R.id.calendarView);
         // set calendar to square
@@ -64,6 +67,7 @@ public class CalendarActivity extends Activity {
                 Intent intent = new Intent(CalendarActivity.this, EntryEditActivity.class);
                 startActivity(intent);
             }
+
         });
 
         mListView = (ListView) findViewById(R.id.listView);
@@ -71,8 +75,17 @@ public class CalendarActivity extends Activity {
 
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
                 // TODO start new activity according to selected item
+                GlimpseEntryPreview selected = (GlimpseEntryPreview) mListView.getItemAtPosition(arg2);
 
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("selected", selected.getEntry());
+
+                Intent intent = new Intent(CalendarActivity.this, EntryEditActivity.class);
+                intent.putExtras(bundle);
+
+                startActivity(intent);
             }
+
         });
     }
 
@@ -82,8 +95,23 @@ public class CalendarActivity extends Activity {
         return true;
     }
 
+    @Override
+    protected void onResume() {
+        mDataSource.open();
+        Calendar selectedDate = Calendar.getInstance();
+        selectedDate.setTimeInMillis(mCalendarView.getDate());
+        updateListView(selectedDate);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        mDataSource.close();
+        super.onPause();
+    }
+
     private void updateListView(Calendar date) {
-        List<GlimpseEntryPreview> titles = mEntryManageModule.getEntryPreviews(date);
+        List<GlimpseEntryPreview> titles = mDataSource.getEntryForOneDay(date);
         ArrayAdapter<GlimpseEntryPreview> listAdapter = new ArrayAdapter<GlimpseEntryPreview>(this,
                 R.layout.calendar_entry, titles);
         mListView.setAdapter(listAdapter);

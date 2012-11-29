@@ -22,4 +22,12 @@
         android:layout_centerHorizontal="true"
         android:text="@string/save_entry" />
 
+    <Button
+        android:id="@+id/showEntryButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/saveEntryButton"
+        android:layout_centerHorizontal="true"
+        android:text="@string/show_entry" />
+
 </RelativeLayout>

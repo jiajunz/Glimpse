@@ -1,6 +1,7 @@
 package edu.cmu.glimpse.entry;
 
-import java.util.Calendar;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Class represents an entry
@@ -8,13 +9,13 @@ import java.util.Calendar;
  * @author hanqingl
  * 
  */
-public class GlimpseEntry {
+public class GlimpseEntry implements Parcelable {
 
-    private final int mId;
-    private final Calendar mCreate;
-    private final Calendar mLastEdit;
-    private final String mContent;
-    private final GlimpseEntryPreview mGlimpseEntryPreview;
+    private int mId;
+    private long mCreate;
+    private long mLastEdit;
+    private String mContent;
+    private GlimpseEntryPreview mPreviewContent;
 
     /**
      * Initiate a new entry with create time, last edit time and content
@@ -28,23 +29,64 @@ public class GlimpseEntry {
      * @param content
      *            content of the entry
      */
-    public GlimpseEntry(int id, Calendar create, Calendar lastEdit, String content) {
+    public GlimpseEntry(int id, long create, long lastEdit, String content) {
         mId = id;
         mCreate = create;
         mLastEdit = lastEdit;
         mContent = content;
-        mGlimpseEntryPreview = new GlimpseEntryPreview(id, content);
+        mPreviewContent = new GlimpseEntryPreview(id, this, content);
     }
 
-    public Calendar getCreatedTime() {
+    public GlimpseEntry(Parcel in) {
+        readFromParcel(in);
+    }
+
+    public static final Parcelable.Creator<GlimpseEntry> CREATOR = new Parcelable.Creator<GlimpseEntry>() {
+        public GlimpseEntry createFromParcel(Parcel in) {
+            return new GlimpseEntry(in);
+        }
+
+        public GlimpseEntry[] newArray(int size) {
+            return new GlimpseEntry[size];
+        }
+    };
+
+    public int getId() {
+        return mId;
+    }
+
+    public long getCreatedTime() {
         return mCreate;
     }
 
-    public Calendar getLastEditTime() {
+    public long getLastEditTime() {
         return mLastEdit;
     }
 
     public String getContent() {
         return mContent;
+    }
+
+    public GlimpseEntryPreview getPreview() {
+        return mPreviewContent;
+    }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(mId);
+        dest.writeLong(mCreate);
+        dest.writeLong(mLastEdit);
+        dest.writeString(mContent);
+    }
+
+    private void readFromParcel(Parcel in) {
+        mId = in.readInt();
+        mCreate = in.readLong();
+        mLastEdit = in.readLong();
+        mContent = in.readString();
+        mPreviewContent = new GlimpseEntryPreview(mId, this, mContent);
     }
 }
