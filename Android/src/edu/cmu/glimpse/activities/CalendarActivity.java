@@ -5,11 +5,11 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -17,10 +17,7 @@ import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.CalendarView.OnDateChangeListener;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import edu.cmu.glimpse.entry.GlimpseEntryPreview;
-import edu.cmu.glimpse.modules.EntryManageModule;
-import edu.cmu.glimpse.modules.IEntryManageModule;
 import edu.cmu.glimpse.sqlite.GlimpseDataSource;
 
 public class CalendarActivity extends Activity {
@@ -29,26 +26,27 @@ public class CalendarActivity extends Activity {
     private ListView mListView;
     private GlimpseDataSource mDataSource;
 
-    private IEntryManageModule mEntryManageModule;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // lock orientation
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         setContentView(R.layout.activity_calendar);
 
-        mEntryManageModule = EntryManageModule.getInstance();
         mDataSource = new GlimpseDataSource(this);
 
         mCalendarView = (CalendarView) findViewById(R.id.calendarView);
         // set calendar to square
-        mCalendarView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-
-            public void onGlobalLayout() {
-                int width = mCalendarView.getWidth();
-                mCalendarView.setLayoutParams(new RelativeLayout.LayoutParams(width, width * 3 / 4));
-            }
-
-        });
+        // mCalendarView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+        //
+        // public void onGlobalLayout() {
+        // int width = mCalendarView.getWidth();
+        // mCalendarView.setLayoutParams(new RelativeLayout.LayoutParams(width, width * 3 / 4));
+        // }
+        //
+        // });
         mCalendarView.setOnDateChangeListener(new OnDateChangeListener() {
 
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {

@@ -1,5 +1,7 @@
 package edu.cmu.glimpse.entry;
 
+import java.util.List;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -16,6 +18,7 @@ public class GlimpseEntry implements Parcelable {
     private long mLastEdit;
     private String mContent;
     private GlimpseEntryPreview mPreviewContent;
+    private List<EntryImage> mImageList;
 
     /**
      * Initiate a new entry with create time, last edit time and content
@@ -51,6 +54,10 @@ public class GlimpseEntry implements Parcelable {
         }
     };
 
+    public void setImageList(List<EntryImage> imageList) {
+        mImageList = imageList;
+    }
+
     public long getId() {
         return mId;
     }
@@ -69,6 +76,10 @@ public class GlimpseEntry implements Parcelable {
 
     public GlimpseEntryPreview getPreview() {
         return mPreviewContent;
+    }
+
+    public List<EntryImage> getImageList() {
+        return mImageList;
     }
 
     public int describeContents() {
