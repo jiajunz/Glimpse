@@ -44,7 +44,7 @@ public class LocationActivity extends MapActivity {
         mMyLocationOverlay.setOnLocationChangedListener(new OnLocationChangedListener() {
 
             public void locationChanged(Location location) {
-                new ReverseGeocodingTask(LocationActivity.this).execute(location);
+                new GooglePlaceTask(LocationActivity.this).execute(location);
             }
 
         });
@@ -114,12 +114,10 @@ public class LocationActivity extends MapActivity {
         return false;
     }
 
-    // AsyncTask encapsulating the reverse-geocoding API. Since the geocoder API is blocked,
-    // we do not want to invoke it from the UI thread.
-    private class ReverseGeocodingTask extends AsyncTask<Location, Void, Void> {
+    private class GooglePlaceTask extends AsyncTask<Location, Void, Void> {
         Context mContext;
 
-        ReverseGeocodingTask(Context context) {
+        GooglePlaceTask(Context context) {
             mContext = context;
         }
 
@@ -146,6 +144,6 @@ public class LocationActivity extends MapActivity {
         }
     }
 
-    private static final String TAG = "LocationActivity";
+    // private static final String TAG = "LocationActivity";
 
 }

@@ -2,6 +2,7 @@ package edu.cmu.glimpse.entry;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import edu.cmu.glimpse.utils.Utils;
 
 public class EntryPlace implements Parcelable {
 
@@ -57,21 +58,8 @@ public class EntryPlace implements Parcelable {
 
         EntryPlace place = (EntryPlace) o;
 
-        if ((mName == null) != (place.getName() == null)) {
-            return false;
-        }
-        if (mName == null) {
-            return place.getName() == null;
-        }
-
-        if ((mGooglePlaceReference == null) != (place.getGooglePlaceReference() == null)) {
-            return false;
-        }
-        if (mGooglePlaceReference == null) {
-            return place.getGooglePlaceReference() == null;
-        }
-
-        return mName.equals(place.getName()) && mGooglePlaceReference.equals(place.getGooglePlaceReference());
+        return Utils.stringEquals(mName, place.getName())
+                && Utils.stringEquals(mGooglePlaceReference, place.getGooglePlaceReference());
     }
 
     @Override
