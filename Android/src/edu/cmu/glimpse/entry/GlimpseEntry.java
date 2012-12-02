@@ -19,6 +19,7 @@ public class GlimpseEntry implements Parcelable {
     private String mContent;
     private GlimpseEntryPreview mPreviewContent;
     private List<EntryImage> mImageList;
+    private EntryPlace mPlace;
 
     /**
      * Initiate a new entry with create time, last edit time and content
@@ -31,13 +32,16 @@ public class GlimpseEntry implements Parcelable {
      *            last edit time of the entry
      * @param content
      *            content of the entry
+     * @param place
+     *            place of the entry
      */
-    public GlimpseEntry(long id, long create, long lastEdit, String content) {
+    public GlimpseEntry(long id, long create, long lastEdit, String content, EntryPlace place) {
         mId = id;
         mCreate = create;
         mLastEdit = lastEdit;
         mContent = content;
         mPreviewContent = new GlimpseEntryPreview(id, this, content);
+        mPlace = place;
     }
 
     public GlimpseEntry(Parcel in) {
@@ -82,6 +86,10 @@ public class GlimpseEntry implements Parcelable {
         return mImageList;
     }
 
+    public EntryPlace getPlace() {
+        return mPlace;
+    }
+
     public int describeContents() {
         return 0;
     }
@@ -91,6 +99,7 @@ public class GlimpseEntry implements Parcelable {
         dest.writeLong(mCreate);
         dest.writeLong(mLastEdit);
         dest.writeString(mContent);
+        dest.writeParcelable(mPlace, flags);
     }
 
     private void readFromParcel(Parcel in) {
@@ -99,5 +108,6 @@ public class GlimpseEntry implements Parcelable {
         mLastEdit = in.readLong();
         mContent = in.readString();
         mPreviewContent = new GlimpseEntryPreview(mId, this, mContent);
+        mPlace = in.readParcelable(EntryPlace.class.getClassLoader());
     }
 }

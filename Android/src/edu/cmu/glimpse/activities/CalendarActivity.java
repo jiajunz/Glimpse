@@ -72,7 +72,6 @@ public class CalendarActivity extends Activity {
         mListView.setOnItemClickListener(new OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                // TODO start new activity according to selected item
                 GlimpseEntryPreview selected = (GlimpseEntryPreview) mListView.getItemAtPosition(arg2);
 
                 Bundle bundle = new Bundle();

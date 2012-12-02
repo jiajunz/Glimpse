@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import edu.cmu.glimpse.entry.EntryImage;
+import edu.cmu.glimpse.entry.EntryPlace;
 import edu.cmu.glimpse.entry.GlimpseEntry;
 import edu.cmu.glimpse.entry.GlimpseEntryPreview;
 
@@ -21,7 +22,9 @@ public class GlimpseDataSource {
             GlimpseSQLiteHelper.ENTRY_COLUMN_ID,
             GlimpseSQLiteHelper.ENTRY_COLUMN_CREATED,
             GlimpseSQLiteHelper.ENTRY_COLUMN_EDITED,
-            GlimpseSQLiteHelper.ENTRY_COLUMN_CONTENT
+            GlimpseSQLiteHelper.ENTRY_COLUMN_CONTENT,
+            GlimpseSQLiteHelper.ENTRY_COLUMN_LOCATION_NAME,
+            GlimpseSQLiteHelper.ENTRY_COLUMN_LOCATION_GOOGLE_REFERENCE
     };
     private static final String[] mImageColumns = {
             GlimpseSQLiteHelper.IMG_COLUMN_ENTRYID,
@@ -41,12 +44,16 @@ public class GlimpseDataSource {
         mDbHelper.close();
     }
 
-    public GlimpseEntry createEntry(String content) {
+    public GlimpseEntry createEntry(String content, EntryPlace place) {
         Log.d(this.getClass().getName(), "Create new entry with: " + content);
 
         ContentValues values = new ContentValues();
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_CREATED, System.currentTimeMillis());
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_EDITED, System.currentTimeMillis());
+        if (place != null) {
+            values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_LOCATION_NAME, place.getName());
+            values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_LOCATION_GOOGLE_REFERENCE, place.getGooglePlaceReference());
+        }
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_CONTENT, content);
         long insertId = mDatabase.insert(GlimpseSQLiteHelper.TABLE_ENTRY, null, values);
         return getEntryWithId(insertId);
@@ -63,7 +70,7 @@ public class GlimpseDataSource {
         mDatabase.insert(GlimpseSQLiteHelper.TABLE_IMG, null, values);
     }
 
-    public GlimpseEntry updateEntry(long id, String content) {
+    public GlimpseEntry updateEntry(long id, String content, EntryPlace place) {
         Log.d(this.getClass().getName(), "Update entry id: " + id + " with: " + content);
 
         GlimpseEntry entry = getEntryWithId(id);
@@ -72,6 +79,11 @@ public class GlimpseDataSource {
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_CREATED, entry.getCreatedTime());
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_EDITED, System.currentTimeMillis());
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_CONTENT, content);
+
+        if (place != null && !place.equals(entry.getPlace())) {
+            values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_LOCATION_NAME, place.getName());
+            values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_LOCATION_GOOGLE_REFERENCE, place.getGooglePlaceReference());
+        }
 
         mDatabase.update(GlimpseSQLiteHelper.TABLE_ENTRY, values, GlimpseSQLiteHelper.ENTRY_COLUMN_ID + " = " + id,
                 null);
@@ -146,7 +158,8 @@ public class GlimpseDataSource {
     }
 
     private GlimpseEntry cursorToGlimpseEntry(Cursor cursor) {
-        return new GlimpseEntry(cursor.getLong(0), cursor.getLong(1), cursor.getLong(2), cursor.getString(3));
+        EntryPlace place = new EntryPlace(cursor.getString(4), cursor.getString(5));
+        return new GlimpseEntry(cursor.getLong(0), cursor.getLong(1), cursor.getLong(2), cursor.getString(3), place);
     }
 
     private EntryImage cursorToEntryImage(Cursor cursor) {

@@ -10,23 +10,27 @@ public class GlimpseSQLiteHelper extends SQLiteOpenHelper {
     public static final String TABLE_IMG = "image";
 
     public static final String ENTRY_COLUMN_ID = "id";
-    public static final String ENTRY_COLUMN_CONTENT = "content";
     public static final String ENTRY_COLUMN_CREATED = "created";
     public static final String ENTRY_COLUMN_EDITED = "edited";
+    public static final String ENTRY_COLUMN_CONTENT = "content";
+    public static final String ENTRY_COLUMN_LOCATION_NAME = "location_name";
+    public static final String ENTRY_COLUMN_LOCATION_GOOGLE_REFERENCE = "location_google_ref";
 
     public static final String IMG_COLUMN_ENTRYID = "entry_id";
     public static final String IMG_COLUMN_IMAGEID = "img_id";
     public static final String IMG_COLUMN_IMGDATA = "image_data";
 
     private static final String DATABASE_NAME = "glimpse.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Database creation SQL statement
     private static final String DATABASE_ENTRY_CREATE = "create table " + TABLE_ENTRY
             + "(" + ENTRY_COLUMN_ID + " integer primary key autoincrement, "
             + ENTRY_COLUMN_CREATED + " integer, "
             + ENTRY_COLUMN_EDITED + " integer, "
-            + ENTRY_COLUMN_CONTENT + " text);";
+            + ENTRY_COLUMN_CONTENT + " text, "
+            + ENTRY_COLUMN_LOCATION_NAME + " text, "
+            + ENTRY_COLUMN_LOCATION_GOOGLE_REFERENCE + " text);";
 
     private static final String DATABASE_IMAGE_CREATE = "create table " + TABLE_IMG
             + "(" + IMG_COLUMN_ENTRYID + " integer, "

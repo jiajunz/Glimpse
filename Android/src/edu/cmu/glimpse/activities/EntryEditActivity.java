@@ -3,7 +3,6 @@ package edu.cmu.glimpse.activities;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -20,6 +19,7 @@ import android.widget.Gallery;
 import android.widget.ImageButton;
 import android.widget.Toast;
 import edu.cmu.glimpse.entry.EntryImage;
+import edu.cmu.glimpse.entry.EntryPlace;
 import edu.cmu.glimpse.entry.GlimpseEntry;
 import edu.cmu.glimpse.sqlite.GlimpseDataSource;
 import edu.cmu.glimpse.widget.ImageAdapter;
@@ -30,6 +30,7 @@ public class EntryEditActivity extends FragmentActivity {
 
     private List<EntryImage> mImageList;
     private List<Integer> mImageUpdateList;
+    private EntryPlace mPlace;
 
     private EditText mEditText;
     private Gallery mGallery;
@@ -39,7 +40,8 @@ public class EntryEditActivity extends FragmentActivity {
     private Button mSaveEntryButton;
     private GlimpseDataSource mDataSource;
 
-    private static final int CAMERA_PIC_REQUEST = 1337;
+    private static final int CAMERA_PIC_REQUEST = 18641;
+    private static final int LOCATION_REQUEST = 18648;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -81,7 +83,7 @@ public class EntryEditActivity extends FragmentActivity {
 
             public void onClick(View v) {
                 Intent locationIntent = new Intent(EntryEditActivity.this, LocationActivity.class);
-                startActivity(locationIntent);
+                startActivityForResult(locationIntent, LOCATION_REQUEST);
             }
 
         });
@@ -90,6 +92,9 @@ public class EntryEditActivity extends FragmentActivity {
         if (bundle != null) {
             GlimpseEntry entry = (GlimpseEntry) bundle.getParcelable("selected");
             mEditText.setText(entry.getContent());
+            if (entry.getPlace() != null) {
+                mEditText.append(entry.getPlace().getName());
+            }
             loadImages(entry);
         }
 
@@ -117,13 +122,24 @@ public class EntryEditActivity extends FragmentActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_PIC_REQUEST && resultCode == Activity.RESULT_OK) {
-            Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-            mImageUpdateList.add(mImageAdapter.getCount());
-            mImageAdapter.addImage(thumbnail);
-            mImageList.add(new EntryImage(mImageAdapter.getCount(), thumbnail));
-        } else {
-            Toast.makeText(this, "Picture NOT taken", Toast.LENGTH_LONG).show();
+        switch (requestCode) {
+            case CAMERA_PIC_REQUEST:
+                if (resultCode == RESULT_OK) {
+                    Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
+                    mImageUpdateList.add(mImageAdapter.getCount());
+                    mImageAdapter.addImage(thumbnail);
+                    mImageList.add(new EntryImage(mImageAdapter.getCount(), thumbnail));
+                } else {
+                    Toast.makeText(this, "Picture NOT taken", Toast.LENGTH_LONG).show();
+                }
+                break;
+
+            case LOCATION_REQUEST:
+                if (resultCode == RESULT_OK) {
+                    mPlace = (EntryPlace) data.getExtras().getParcelable("selected");
+                    mEditText.setText(mPlace.getName());
+                }
+                break;
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -149,7 +165,7 @@ public class EntryEditActivity extends FragmentActivity {
     private void saveEntry(Bundle bundle) {
         String content = mEditText.getText().toString();
         if (bundle == null) {
-            GlimpseEntry entry = mDataSource.createEntry(content);
+            GlimpseEntry entry = mDataSource.createEntry(content, mPlace);
             if (!mImageList.isEmpty()) {
                 saveImages(entry.getId());
             }
@@ -157,7 +173,7 @@ public class EntryEditActivity extends FragmentActivity {
             GlimpseEntry entry = (GlimpseEntry) bundle.getParcelable("selected");
             String originalContent = entry.getContent();
             if (!content.equals(originalContent)) {
-                mDataSource.updateEntry(entry.getId(), content);
+                mDataSource.updateEntry(entry.getId(), content, mPlace);
             }
             for (int updateIndex : mImageUpdateList) {
                 mDataSource.insertImage(entry.getId(), mImageList.get(updateIndex));
