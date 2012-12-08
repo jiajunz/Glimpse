@@ -7,7 +7,7 @@ import android.graphics.BitmapFactory;
 
 public class EntryImage {
 
-    private final long mImageId;
+    private long mImageId;
     private final byte[] mImageData;
 
     public EntryImage(long imageId, Bitmap image) {
@@ -23,6 +23,10 @@ public class EntryImage {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         return baos.toByteArray();
+    }
+
+    public void setImageId(long imageId) {
+        mImageId = imageId;
     }
 
     public long getImageId() {

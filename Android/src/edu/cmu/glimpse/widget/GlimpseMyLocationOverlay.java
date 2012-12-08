@@ -9,7 +9,7 @@ import com.google.android.maps.MyLocationOverlay;
 public class GlimpseMyLocationOverlay extends MyLocationOverlay {
 
     public interface OnLocationChangedListener {
-        void locationChanged(Location location);
+        void onLocationChanged(Location location);
     }
 
     private OnLocationChangedListener mOnLocationChangedListener;
@@ -25,7 +25,7 @@ public class GlimpseMyLocationOverlay extends MyLocationOverlay {
     @Override
     public synchronized void onLocationChanged(Location location) {
         if (mOnLocationChangedListener != null) {
-            mOnLocationChangedListener.locationChanged(location);
+            mOnLocationChangedListener.onLocationChanged(location);
         }
 
         super.onLocationChanged(location);

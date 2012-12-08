@@ -15,7 +15,8 @@ import edu.cmu.glimpse.entry.GlimpseEntry;
 import edu.cmu.glimpse.entry.GlimpseEntryPreview;
 
 public class GlimpseDataSource {
-    // Database fields
+    private static final String TAG = "GlimpseDataSource";
+
     private SQLiteDatabase mDatabase;
     private final GlimpseSQLiteHelper mDbHelper;
     private static final String[] mEntryColumns = {
@@ -45,7 +46,7 @@ public class GlimpseDataSource {
     }
 
     public GlimpseEntry createEntry(String content, EntryPlace place) {
-        Log.d(this.getClass().getName(), "Create new entry with: " + content);
+        Log.d(TAG, "Create new entry with: " + content);
 
         ContentValues values = new ContentValues();
         values.put(GlimpseSQLiteHelper.ENTRY_COLUMN_CREATED, System.currentTimeMillis());
@@ -60,7 +61,7 @@ public class GlimpseDataSource {
     }
 
     public void insertImage(long entryId, EntryImage entryImage) {
-        Log.d(this.getClass().getName(), "Insert new image: " + entryImage);
+        Log.d(TAG, "Insert new image: " + entryImage);
 
         ContentValues values = new ContentValues();
         values.put(GlimpseSQLiteHelper.IMG_COLUMN_ENTRYID, entryId);
@@ -70,8 +71,24 @@ public class GlimpseDataSource {
         mDatabase.insert(GlimpseSQLiteHelper.TABLE_IMG, null, values);
     }
 
+    /**
+     * Remove an image from database
+     * 
+     * @param entryId
+     * @param entryImage
+     * @return the number of rows affected if a whereClause is passed in, 0
+     *         otherwise. To remove all rows and get a count pass "1" as the
+     *         whereClause.
+     */
+    public int deleteImage(long entryId, EntryImage entryImage) {
+        Log.d(TAG, "Remove image: " + entryImage);
+
+        return mDatabase.delete(GlimpseSQLiteHelper.TABLE_IMG, GlimpseSQLiteHelper.IMG_COLUMN_ENTRYID + " = " + entryId
+                + " and " + GlimpseSQLiteHelper.IMG_COLUMN_IMAGEID + " = " + entryImage.getImageId(), null);
+    }
+
     public GlimpseEntry updateEntry(long id, String content, EntryPlace place) {
-        Log.d(this.getClass().getName(), "Update entry id: " + id + " with: " + content);
+        Log.d(TAG, "Update entry id: " + id + " with: " + content);
 
         GlimpseEntry entry = getEntryWithId(id);
 
@@ -93,13 +110,19 @@ public class GlimpseDataSource {
 
     public void deleteEntry(GlimpseEntry entry) {
         long id = entry.getId();
-        mDatabase.delete(GlimpseSQLiteHelper.TABLE_ENTRY, GlimpseSQLiteHelper.ENTRY_COLUMN_ID + " = " + id, null);
+        deleteEntry(id);
+    }
+
+    public void deleteEntry(long entryId) {
+        Log.d(TAG, "Delete entry with id: " + entryId);
+
+        mDatabase.delete(GlimpseSQLiteHelper.TABLE_ENTRY, GlimpseSQLiteHelper.ENTRY_COLUMN_ID + " = " + entryId, null);
     }
 
     public List<GlimpseEntry> getAllEntries() {
         List<GlimpseEntry> entries = new ArrayList<GlimpseEntry>();
 
-        Log.d(this.getClass().getName(), "Query all entries");
+        Log.d(TAG, "Query all entries");
 
         Cursor cursor = mDatabase.query(GlimpseSQLiteHelper.TABLE_ENTRY, mEntryColumns, null, null, null, null, null);
 
@@ -114,7 +137,7 @@ public class GlimpseDataSource {
     }
 
     public List<EntryImage> getImagesForEntry(long entryId) {
-        Log.d(this.getClass().getName(), "Query all images for entryId = " + entryId);
+        Log.d(TAG, "Query all images for entryId = " + entryId);
 
         List<EntryImage> images = new ArrayList<EntryImage>();
         String selection = GlimpseSQLiteHelper.IMG_COLUMN_ENTRYID + " = " + entryId;

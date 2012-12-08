@@ -27,7 +27,7 @@ public class GooglePlaceClient {
         super();
     }
 
-    public static GooglePlaceClient getInstance() {
+    public synchronized static GooglePlaceClient getInstance() {
         if (mClient == null) {
             mClient = new GooglePlaceClient();
         }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -29,6 +30,7 @@ public class LocationActivity extends MapActivity {
     private MapView mMapView;
     private ListView mLocationListView;
     private GlimpseMyLocationOverlay mMyLocationOverlay;
+    private ProgressDialog mLoadingDialog;
     private GooglePlaceClient mGooglePlaceClient;
 
     private List<EntryPlace> mPlaces;
@@ -43,7 +45,7 @@ public class LocationActivity extends MapActivity {
         mMyLocationOverlay = new GlimpseMyLocationOverlay(this, mMapView);
         mMyLocationOverlay.setOnLocationChangedListener(new OnLocationChangedListener() {
 
-            public void locationChanged(Location location) {
+            public void onLocationChanged(Location location) {
                 new GooglePlaceTask(LocationActivity.this).execute(location);
             }
 
@@ -75,6 +77,8 @@ public class LocationActivity extends MapActivity {
             }
 
         });
+
+        mLoadingDialog = ProgressDialog.show(this, "Loading", "Loading location data, just one second...", true);
 
         mGooglePlaceClient = GooglePlaceClient.getInstance();
 
@@ -139,6 +143,7 @@ public class LocationActivity extends MapActivity {
                 return;
             }
 
+            mLoadingDialog.dismiss();
             mLocationListView
                     .setAdapter(new ArrayAdapter<EntryPlace>(mContext, android.R.layout.simple_list_item_1, mPlaces));
         }

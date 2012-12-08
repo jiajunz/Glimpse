@@ -1,18 +1,22 @@
 package edu.cmu.glimpse.activities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Gallery;
@@ -29,16 +33,20 @@ import edu.cmu.glimpse.widget.ImageDialogFragment;
 public class EntryEditActivity extends FragmentActivity {
 
     private List<EntryImage> mImageList;
-    private List<Integer> mImageUpdateList;
+    private Set<EntryImage> mUpdatedImages;
     private EntryPlace mPlace;
+    private boolean mPlaceUpdated = false;
+    private long mNextImageId = 1;
 
     private EditText mEditText;
+    private Button mLocationText;
     private Gallery mGallery;
     private ImageAdapter mImageAdapter;
     private ImageButton mNewImageButton;
     private ImageButton mLocationButton;
     private Button mSaveEntryButton;
     private GlimpseDataSource mDataSource;
+    private GlimpseEntry mGlimpseEntry;
 
     private static final int CAMERA_PIC_REQUEST = 18641;
     private static final int LOCATION_REQUEST = 18648;
@@ -48,12 +56,13 @@ public class EntryEditActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_entry_edit);
 
-        mImageUpdateList = new ArrayList<Integer>();
+        mUpdatedImages = new HashSet<EntryImage>();
         mImageList = new ArrayList<EntryImage>();
         mDataSource = new GlimpseDataSource(this);
         mDataSource.open();
 
         mEditText = (EditText) findViewById(R.id.entryEditText);
+        mLocationText = (Button) findViewById(R.id.locationText);
 
         mGallery = (Gallery) findViewById(R.id.entryGallery);
         mGallery.setOnItemClickListener(new OnItemClickListener() {
@@ -61,7 +70,15 @@ public class EntryEditActivity extends FragmentActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ImageDialogFragment imageDialog = new ImageDialogFragment();
                 imageDialog.setImageBitmap(mImageList.get(position).getImage());
-                imageDialog.show(getSupportFragmentManager(), "123");
+                imageDialog.show(getSupportFragmentManager(), "Photo");
+            }
+
+        });
+        mGallery.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                showDeleteDialog(position);
+                return true;
             }
 
         });
@@ -90,31 +107,21 @@ public class EntryEditActivity extends FragmentActivity {
 
         final Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            GlimpseEntry entry = (GlimpseEntry) bundle.getParcelable("selected");
-            mEditText.setText(entry.getContent());
-            if (entry.getPlace() != null) {
-                mEditText.append(entry.getPlace().getName());
+            mGlimpseEntry = (GlimpseEntry) bundle.getParcelable("selected");
+            mEditText.setText(mGlimpseEntry.getContent());
+            if (mGlimpseEntry.getPlace() != null) {
+                mPlace = mGlimpseEntry.getPlace();
+                mLocationText.setText(mPlace.getName());
+                mLocationText.setVisibility(View.VISIBLE);
             }
-            loadImages(entry);
+            loadImages();
         }
 
         mSaveEntryButton = (Button) findViewById(R.id.saveEntryButton);
         mSaveEntryButton.setOnClickListener(new OnClickListener() {
 
             public void onClick(View v) {
-                saveEntry(bundle);
-            }
-
-        });
-
-        Button showEntryButton = (Button) findViewById(R.id.showEntryButton);
-        showEntryButton.setOnClickListener(new OnClickListener() {
-
-            public void onClick(View v) {
-                List<GlimpseEntry> list = mDataSource.getAllEntries();
-                for (GlimpseEntry entry : list) {
-                    Log.d(this.getClass().getName(), entry.getContent());
-                }
+                saveEntry();
             }
 
         });
@@ -126,9 +133,11 @@ public class EntryEditActivity extends FragmentActivity {
             case CAMERA_PIC_REQUEST:
                 if (resultCode == RESULT_OK) {
                     Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-                    mImageUpdateList.add(mImageAdapter.getCount());
                     mImageAdapter.addImage(thumbnail);
-                    mImageList.add(new EntryImage(mImageAdapter.getCount(), thumbnail));
+                    System.out.println("New image id: " + mNextImageId);
+                    EntryImage newImage = new EntryImage(mNextImageId++, thumbnail);
+                    mImageList.add(newImage);
+                    mUpdatedImages.add(newImage);
                 } else {
                     Toast.makeText(this, "Picture NOT taken", Toast.LENGTH_LONG).show();
                 }
@@ -136,10 +145,16 @@ public class EntryEditActivity extends FragmentActivity {
 
             case LOCATION_REQUEST:
                 if (resultCode == RESULT_OK) {
-                    mPlace = (EntryPlace) data.getExtras().getParcelable("selected");
-                    mEditText.setText(mPlace.getName());
+                    EntryPlace newPlace = (EntryPlace) data.getExtras().getParcelable("selected");
+                    if (!newPlace.equals(mPlace)) {
+                        mPlace = newPlace;
+                        mPlaceUpdated = true;
+                    }
+                    mLocationText.setText(mPlace.getName());
+                    mLocationText.setVisibility(View.VISIBLE);
                 }
                 break;
+
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -162,38 +177,61 @@ public class EntryEditActivity extends FragmentActivity {
         return true;
     }
 
-    private void saveEntry(Bundle bundle) {
+    private void saveEntry() {
         String content = mEditText.getText().toString();
-        if (bundle == null) {
-            GlimpseEntry entry = mDataSource.createEntry(content, mPlace);
+        if (mGlimpseEntry == null) {
+            mGlimpseEntry = mDataSource.createEntry(content, mPlace);
             if (!mImageList.isEmpty()) {
-                saveImages(entry.getId());
+                saveAllImages(mGlimpseEntry.getId());
             }
         } else {
-            GlimpseEntry entry = (GlimpseEntry) bundle.getParcelable("selected");
-            String originalContent = entry.getContent();
-            if (!content.equals(originalContent)) {
-                mDataSource.updateEntry(entry.getId(), content, mPlace);
+            String originalContent = mGlimpseEntry.getContent();
+            if (!content.equals(originalContent) || mPlaceUpdated) {
+                mDataSource.updateEntry(mGlimpseEntry.getId(), content, mPlace);
+                mPlaceUpdated = false;
             }
-            for (int updateIndex : mImageUpdateList) {
-                mDataSource.insertImage(entry.getId(), mImageList.get(updateIndex));
+            for (EntryImage image : mUpdatedImages) {
+                mDataSource.insertImage(mGlimpseEntry.getId(), image);
             }
-            mImageUpdateList.clear();
+            mUpdatedImages.clear();
         }
     }
 
-    private void saveImages(long entryId) {
+    private void saveAllImages(long entryId) {
         for (EntryImage image : mImageList) {
             mDataSource.insertImage(entryId, image);
         }
     }
 
-    private void loadImages(GlimpseEntry entry) {
-        entry.setImageList(mDataSource.getImagesForEntry(entry.getId()));
+    private void loadImages() {
+        mGlimpseEntry.setImageList(mDataSource.getImagesForEntry(mGlimpseEntry.getId()));
+        mNextImageId = mGlimpseEntry.getNextImageId();
 
-        for (EntryImage image : entry.getImageList()) {
+        for (EntryImage image : mGlimpseEntry.getImageList()) {
             mImageAdapter.addImage(image.getImage());
-            mImageList.add(new EntryImage(mImageAdapter.getCount(), image.getImage()));
+            mImageList.add(new EntryImage(image.getImageId(), image.getImage()));
         }
+    }
+
+    private void showDeleteDialog(final int imagePosition) {
+        new AlertDialog.Builder(this).setTitle("Delete Image?")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialog, int which) {
+                        mUpdatedImages.remove(mImageList.get(imagePosition));
+                        mImageAdapter.deteleImage(imagePosition);
+                        if (mGlimpseEntry != null) {
+                            mDataSource.deleteImage(mGlimpseEntry.getId(), mImageList.get(imagePosition));
+                        }
+                        mImageList.remove(imagePosition);
+                    }
+
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+
+                }).create().show();
     }
 }

@@ -16,8 +16,8 @@ public class ImageAdapter extends BaseAdapter {
     private final List<Bitmap> mBitmapList;
     private final Context mContext;
 
-    private static int WIDTH = 120;
-    private static int HEIGHT = 160;
+    private static final int WIDTH = 120;
+    private static final int HEIGHT = 160;
 
     public ImageAdapter(Context context) {
         this(context, new ArrayList<Bitmap>());
@@ -32,27 +32,29 @@ public class ImageAdapter extends BaseAdapter {
         return mBitmapList.size();
     }
 
-    public Object getItem(int position) {
-        return mBitmapList.get(position);
+    public Object getItem(int location) {
+        return mBitmapList.get(location);
     }
 
-    public long getItemId(int position) {
-        return position;
+    public long getItemId(int location) {
+        return location;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
         ImageView imgView = new ImageView(mContext);
-
         imgView.setImageBitmap(mBitmapList.get(position));
-
         imgView.setLayoutParams(new Gallery.LayoutParams(WIDTH, HEIGHT));
         imgView.setScaleType(ImageView.ScaleType.FIT_XY);
-
         return imgView;
     }
 
     public void addImage(Bitmap bitmap) {
         mBitmapList.add(bitmap);
+        notifyDataSetChanged();
+    }
+
+    public void deteleImage(int location) {
+        mBitmapList.remove(location);
         notifyDataSetChanged();
     }
 

@@ -14,6 +14,18 @@
         <requestFocus />
     </edu.cmu.glimpse.widget.UnderlinedEditText>
 
+    <Button
+        android:id="@+id/locationText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:drawableLeft="@drawable/location_icon_small"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:inputType="none"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
     <Gallery
         android:id="@+id/entryGallery"
         android:layout_width="fill_parent"
@@ -48,12 +60,5 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="@string/save_entry" />
-
-    <Button
-        android:id="@+id/showEntryButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/show_entry" />
 
 </LinearLayout>
