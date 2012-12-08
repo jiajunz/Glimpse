@@ -20,7 +20,7 @@ public class GlimpseSQLiteHelper extends SQLiteOpenHelper {
     public static final String IMG_COLUMN_IMAGEID = "img_id";
     public static final String IMG_COLUMN_IMGDATA = "image_data";
 
-    private static final String DATABASE_NAME = "glimpse.db";
+    public static final String DATABASE_NAME = "glimpse.db";
     private static final int DATABASE_VERSION = 3;
 
     // Database creation SQL statement

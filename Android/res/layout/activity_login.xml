@@ -40,6 +40,14 @@
             facebook:fetch_user_info="true" />
 
         <ImageButton
+            android:id="@+id/dropbox_login_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@string/gmail_login"
+            android:src="@drawable/gmail_login" />
+
+        <ImageButton
             android:id="@+id/google_login_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -26,15 +26,24 @@ import com.facebook.SessionState;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 
+import edu.cmu.glimpse.modules.DropboxSyncModule;
+import edu.cmu.glimpse.modules.GlimpseAccountManager;
+import edu.cmu.glimpse.sqlite.GlimpseSQLiteHelper;
+
 public class LoginActivity extends FacebookActivity {
 
     private static final String TAG = "LoginActivity";
+    private static final String DB_NAME = "GlimpseDB";
+    private static final String DB_PATH = "/data/data/edu.cmu.glimpse.activities/databases/"
+            + GlimpseSQLiteHelper.DATABASE_NAME;
 
     private ImageView mLoadingImage;
     private AnimationDrawable mLoadingAnimation;
     private ImageView mLogoImageView;
-    private LoginButton mLoginButton;
+    private LoginButton mFacebookLoginButton;
     private GraphUser mUser;
+    private ImageButton mDropboxLoginButton;
+    private DropboxSyncModule mDropboxSyncModule;
     private boolean mUserRequested = false;
 
     @Override
@@ -42,21 +51,15 @@ public class LoginActivity extends FacebookActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        mDropboxSyncModule = new DropboxSyncModule(this);
+        GlimpseAccountManager.mDropboxSyncModule = mDropboxSyncModule;
+
         mLoadingImage = (ImageView) findViewById(R.id.login_loading_image);
         mLoadingImage.setBackgroundResource(R.drawable.loading_animation);
         mLoadingAnimation = (AnimationDrawable) mLoadingImage.getBackground();
         mLoadingAnimation.start();
 
-        // if (savedInstanceState != null) {
-        // String facebookUserString = savedInstanceState.getString("facebookUser");
-        // try {
-        // mUser = GraphObject.Factory.create(new JSONObject(facebookUserString), GraphUser.class);
-        // } catch (JSONException e) {
-        // Log.w(TAG, e.getMessage());
-        // }
-        // }
-
-        mLoginButton = (LoginButton) findViewById(R.id.facebook_login_button);
+        mFacebookLoginButton = (LoginButton) findViewById(R.id.facebook_login_button);
 
         if (isSessionOpen()) {
             if (mUser == null) {
@@ -64,15 +67,23 @@ public class LoginActivity extends FacebookActivity {
             }
         } else {
             mLoadingImage.setVisibility(View.INVISIBLE);
-            mLoginButton.setVisibility(View.VISIBLE);
+            mFacebookLoginButton.setVisibility(View.VISIBLE);
         }
+
+        mDropboxLoginButton = (ImageButton) findViewById(R.id.dropbox_login_button);
+        mDropboxLoginButton.setOnClickListener(new OnClickListener() {
+
+            public void onClick(View v) {
+                mDropboxSyncModule.authenticate();
+            }
+        });
 
         mLogoImageView = (ImageView) findViewById(R.id.logo_image_view);
         mLogoImageView.setOnClickListener(new OnClickListener() {
 
             public void onClick(View v) {
                 if (mUser != null) {
-                    enter();
+                    // enter();
                 } else {
                     Log.w(TAG, "mUser == null !");
                 }
@@ -89,6 +100,9 @@ public class LoginActivity extends FacebookActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (mDropboxSyncModule.isAuthenticated()) {
+            enter();
+        }
     }
 
     @Override
@@ -111,7 +125,7 @@ public class LoginActivity extends FacebookActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         mLoadingImage.setVisibility(View.INVISIBLE);
-        mLoginButton.setVisibility(View.VISIBLE);
+        mFacebookLoginButton.setVisibility(View.VISIBLE);
         mLogoImageView.setClickable(isSessionOpen() && mUser != null);
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -138,7 +152,7 @@ public class LoginActivity extends FacebookActivity {
             public void onCompleted(GraphUser user, Response response) {
                 mUser = user;
                 if (user != null) {
-                    enter();
+                    // enter();
                 }
             }
         });
@@ -193,12 +207,8 @@ public class LoginActivity extends FacebookActivity {
 
             @Override
             protected Void doInBackground(Void... params) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                Log.d(TAG, "start sync");
+                mDropboxSyncModule.syncContent(DB_NAME, DB_PATH);
                 return null;
             }
 
