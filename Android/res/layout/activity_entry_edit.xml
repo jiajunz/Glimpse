@@ -1,64 +1,69 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
-
-    <edu.cmu.glimpse.widget.UnderlinedEditText
-        android:id="@+id/entryEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:inputType="textMultiLine" >
-
-        <requestFocus />
-    </edu.cmu.glimpse.widget.UnderlinedEditText>
-
-    <Button
-        android:id="@+id/locationText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="false"
-        android:drawableLeft="@drawable/location_icon_small"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:inputType="none"
-        android:textSize="15sp"
-        android:visibility="gone" />
-
-    <Gallery
-        android:id="@+id/entryGallery"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:spacing="5dp" >
-    </Gallery>
+    android:layout_height="match_parent" >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal" >
+        android:orientation="vertical" >
 
-        <ImageButton
-            android:id="@+id/imgButton"
+        <edu.cmu.glimpse.widget.UnderlinedEditText
+            android:id="@+id/entryEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:inputType="textMultiLine" >
+
+            <requestFocus />
+        </edu.cmu.glimpse.widget.UnderlinedEditText>
+
+        <Button
+            android:id="@+id/locationText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/take_img"
-            android:src="@drawable/camera_icon" />
+            android:clickable="false"
+            android:drawableLeft="@drawable/location_icon_small"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:inputType="none"
+            android:textSize="15sp"
+            android:visibility="gone" />
 
-        <ImageButton
-            android:id="@+id/locationButton"
+        <Gallery
+            android:id="@+id/entryGallery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:spacing="5dp" >
+        </Gallery>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal" >
+
+            <ImageButton
+                android:id="@+id/imgButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/take_img"
+                android:src="@drawable/camera_icon" />
+
+            <ImageButton
+                android:id="@+id/locationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/location"
+                android:src="@drawable/location_icon" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/saveEntryButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/location"
-            android:src="@drawable/location_icon" />
+            android:layout_gravity="center_horizontal"
+            android:text="@string/save_entry" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/saveEntryButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/save_entry" />
-
-</LinearLayout>
+</ScrollView>

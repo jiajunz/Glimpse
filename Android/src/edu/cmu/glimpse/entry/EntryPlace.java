@@ -1,5 +1,6 @@
 package edu.cmu.glimpse.entry;
 
+import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import edu.cmu.glimpse.utils.Utils;
@@ -8,10 +9,16 @@ public class EntryPlace implements Parcelable {
 
     private String mName;
     private String mGooglePlaceReference;
+    private Location mLocation;
 
     public EntryPlace(String name, String googlePlaceReference) {
+        this(name, googlePlaceReference, null);
+    }
+
+    public EntryPlace(String name, String googlePlaceReference, Location location) {
         mName = name;
         mGooglePlaceReference = googlePlaceReference;
+        mLocation = location;
     }
 
     public EntryPlace(Parcel in) {
@@ -36,6 +43,10 @@ public class EntryPlace implements Parcelable {
         return mGooglePlaceReference;
     }
 
+    public Location getLocation() {
+        return mLocation;
+    }
+
     public int describeContents() {
         return 0;
     }
@@ -43,11 +54,13 @@ public class EntryPlace implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mName);
         dest.writeString(mGooglePlaceReference);
+        dest.writeParcelable(mLocation, flags);
     }
 
     private void readFromParcel(Parcel in) {
         mName = in.readString();
         mGooglePlaceReference = in.readString();
+        mLocation = in.readParcelable(Location.class.getClassLoader());
     }
 
     @Override

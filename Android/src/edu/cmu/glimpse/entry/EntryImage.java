@@ -37,7 +37,7 @@ public class EntryImage {
         return mImageData;
     }
 
-    public Bitmap getImage() {
+    public Bitmap getImageBitmap() {
         return BitmapFactory.decodeByteArray(mImageData, 0, mImageData.length);
     }
 

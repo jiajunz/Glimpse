@@ -5,13 +5,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -22,15 +26,25 @@ import android.widget.EditText;
 import android.widget.Gallery;
 import android.widget.ImageButton;
 import android.widget.Toast;
+
+import com.facebook.FacebookActivity;
+import com.facebook.HttpMethod;
+import com.facebook.Request;
+import com.facebook.Request.GraphPlaceListCallback;
+import com.facebook.Response;
+import com.facebook.model.GraphPlace;
+
 import edu.cmu.glimpse.entry.EntryImage;
 import edu.cmu.glimpse.entry.EntryPlace;
 import edu.cmu.glimpse.entry.GlimpseEntry;
+import edu.cmu.glimpse.modules.GlimpseAccountManager;
 import edu.cmu.glimpse.sqlite.GlimpseDataSource;
 import edu.cmu.glimpse.widget.ImageAdapter;
 import edu.cmu.glimpse.widget.ImageDialogFragment;
 
 @SuppressWarnings("deprecation")
-public class EntryEditActivity extends FragmentActivity {
+public class EntryEditActivity extends FacebookActivity {
+    private static final String TAG = "EntryEditActivity";
 
     private List<EntryImage> mImageList;
     private Set<EntryImage> mUpdatedImages;
@@ -69,7 +83,7 @@ public class EntryEditActivity extends FragmentActivity {
 
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ImageDialogFragment imageDialog = new ImageDialogFragment();
-                imageDialog.setImageBitmap(mImageList.get(position).getImage());
+                imageDialog.setImageBitmap(mImageList.get(position).getImageBitmap());
                 imageDialog.show(getSupportFragmentManager(), "Photo");
             }
 
@@ -128,7 +142,7 @@ public class EntryEditActivity extends FragmentActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case CAMERA_PIC_REQUEST:
                 if (resultCode == RESULT_OK) {
@@ -177,6 +191,25 @@ public class EntryEditActivity extends FragmentActivity {
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.post_facebook_status:
+                postFacebookStatus();
+                break;
+
+            case R.id.upload_facebook_image:
+                for (EntryImage img : mImageList) {
+                    uploadFacebookImage(img.getImageBitmap());
+                }
+                break;
+
+            default:
+                Log.e(TAG, "Unknown options item selected");
+        }
+        return true;
+    }
+
     private void saveEntry() {
         String content = mEditText.getText().toString();
         if (mGlimpseEntry == null) {
@@ -195,6 +228,8 @@ public class EntryEditActivity extends FragmentActivity {
             }
             mUpdatedImages.clear();
         }
+        
+        GlimpseAccountManager.syncDropbox();
     }
 
     private void saveAllImages(long entryId) {
@@ -208,8 +243,8 @@ public class EntryEditActivity extends FragmentActivity {
         mNextImageId = mGlimpseEntry.getNextImageId();
 
         for (EntryImage image : mGlimpseEntry.getImageList()) {
-            mImageAdapter.addImage(image.getImage());
-            mImageList.add(new EntryImage(image.getImageId(), image.getImage()));
+            mImageAdapter.addImage(image.getImageBitmap());
+            mImageList.add(new EntryImage(image.getImageId(), image.getImageBitmap()));
         }
     }
 
@@ -233,5 +268,109 @@ public class EntryEditActivity extends FragmentActivity {
                     }
 
                 }).create().show();
+    }
+
+    private void postFacebookStatus() {
+        final Request statusRequest = Request.newStatusUpdateRequest(this.getSession(), mEditText.getText()
+                .toString(),
+                new Request.Callback() {
+
+                    public void onCompleted(Response response) {
+                        showResponseToast(response, "Success", "Status post failed");
+                    }
+
+                });
+
+        if (mPlace != null && mPlace.getLocation() != null) {
+            searchFacebookPlace(new GraphPlaceListCallback() {
+
+                public void onCompleted(List<GraphPlace> places, Response response) {
+                    if (places != null && places.size() > 0) {
+                        GraphPlace myPlace = places.get(0);
+                        Bundle params = new Bundle();
+                        params.putString("place", myPlace.getId());
+                        params.putString("message", mEditText.getText().toString());
+                        JSONObject coordinates = new JSONObject();
+                        try {
+                            coordinates.put("latitude", myPlace.getLocation().getLatitude());
+                            coordinates.put("longitude", myPlace.getLocation().getLongitude());
+                            params.putString("coordinates", coordinates.toString());
+                            Request checkinRequest = new Request(getSession(), "me/checkins",
+                                    params, HttpMethod.POST, new Request.Callback() {
+
+                                        public void onCompleted(Response response) {
+                                            showResponseToast(response, "Success", "Checkin failed");
+                                        }
+
+                                    });
+                            Request.executeBatchAsync(checkinRequest);
+                            return;
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error create JSONObject coordinates, send message without checkin");
+                        }
+                    }
+                    Request.executeBatchAsync(statusRequest);
+                }
+            });
+        } else {
+            Request.executeBatchAsync(statusRequest);
+        }
+    }
+
+    private void uploadFacebookImage(Bitmap bitmap) {
+        final Bundle params = new Bundle();
+        params.putParcelable("picture", bitmap);
+        if (mEditText.getText().toString().length() > 0) {
+            params.putString("name", mEditText.getText().toString());
+        }
+        if (mPlace != null && mPlace.getLocation() != null) {
+            searchFacebookPlace(new GraphPlaceListCallback() {
+
+                public void onCompleted(List<GraphPlace> places, Response response) {
+                    if (places != null && places.size() > 0) {
+                        GraphPlace myPlace = places.get(0);
+                        params.putString("place", myPlace.getId());
+                        try {
+                            JSONObject coordinates = new JSONObject();
+                            coordinates.put("latitude", myPlace.getLocation().getLatitude());
+                            coordinates.put("longitude", myPlace.getLocation().getLongitude());
+                            params.putString("coordinates", coordinates.toString());
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error create JSONObject coordinates, upload picture without checkin");
+                        }
+                        Request request = new Request(getSession(), "me/photos", params, HttpMethod.POST,
+                                new Request.Callback() {
+
+                                    public void onCompleted(Response response) {
+                                        showResponseToast(response, "Success", "Upload picture failed");
+                                    }
+
+                                });
+                        Request.executeBatchAsync(request);
+                    }
+                }
+
+            });
+        } else {
+            Request request = new Request(getSession(), "me/photos", params, HttpMethod.POST, new Request.Callback() {
+
+                public void onCompleted(Response response) {
+                    showResponseToast(response, "Success", "Upload picture failed");
+                }
+
+            });
+            Request.executeBatchAsync(request);
+        }
+    }
+
+    private void searchFacebookPlace(GraphPlaceListCallback graphPlaceListCallback) {
+        Request locationRequest = Request.newPlacesSearchRequest(getSession(), mPlace.getLocation(),
+                50, 10, mPlace.getName(), graphPlaceListCallback);
+
+        Request.executeBatchAsync(locationRequest);
+    }
+
+    private void showResponseToast(Response response, String successMsg, String errMsg) {
+        Toast.makeText(this, response.getError() == null ? successMsg : errMsg, Toast.LENGTH_SHORT).show();
     }
 }

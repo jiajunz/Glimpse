@@ -13,6 +13,7 @@ import edu.cmu.glimpse.entry.EntryImage;
 import edu.cmu.glimpse.entry.EntryPlace;
 import edu.cmu.glimpse.entry.GlimpseEntry;
 import edu.cmu.glimpse.entry.GlimpseEntryPreview;
+import edu.cmu.glimpse.modules.GlimpseAccountManager;
 
 public class GlimpseDataSource {
     private static final String TAG = "GlimpseDataSource";
@@ -39,10 +40,12 @@ public class GlimpseDataSource {
 
     public void open() {
         mDatabase = mDbHelper.getWritableDatabase();
+        GlimpseAccountManager.syncDropbox();
     }
 
     public void close() {
         mDbHelper.close();
+        GlimpseAccountManager.syncDropbox();
     }
 
     public GlimpseEntry createEntry(String content, EntryPlace place) {

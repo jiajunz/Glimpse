@@ -6,6 +6,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class GlimpseSQLiteHelper extends SQLiteOpenHelper {
+    public static final String DB_NAME = "GlimpseDB";
+    public static final String DB_PATH = "/data/data/edu.cmu.glimpse.activities/databases/"
+            + GlimpseSQLiteHelper.DATABASE_NAME;
+
     public static final String TABLE_ENTRY = "glimpse";
     public static final String TABLE_IMG = "image";
 

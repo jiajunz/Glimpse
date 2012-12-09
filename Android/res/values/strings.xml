@@ -20,5 +20,8 @@
     <string name="back_to_login">Back to Login Page</string>
     <string name="logo">Logo</string>
     <string name="loading">Loading</string>
+    <string name="post_facebook_status">Post Status to Facebook</string>
+    <string name="upload_facebook_image">Upload Image to Facebook</string>
+    <string name="user_profile_image">User Profile Image</string>
 
 </resources>

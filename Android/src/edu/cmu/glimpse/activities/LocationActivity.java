@@ -79,28 +79,17 @@ public class LocationActivity extends MapActivity {
         });
 
         mLoadingDialog = ProgressDialog.show(this, "Loading", "Loading location data, just one second...", true);
-
         mGooglePlaceClient = GooglePlaceClient.getInstance();
-
-        // mLocationModule = new LocationModule(this, new OnLocationUpdatedListener() {
-        //
-        // public void updateLocation(Location location) {
-        // new ReverseGeocodingTask(LocationActivity.this).execute(location);
-        // }
-        //
-        // });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // mLocationModule.startLocationUpdate();
         mMyLocationOverlay.enableMyLocation();
     }
 
     @Override
     protected void onPause() {
-        // mLocationModule.stopLocationUpdate();
         mMyLocationOverlay.disableMyLocation();
         super.onPause();
     }
@@ -114,7 +103,6 @@ public class LocationActivity extends MapActivity {
 
     @Override
     protected boolean isRouteDisplayed() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -130,7 +118,6 @@ public class LocationActivity extends MapActivity {
             try {
                 mPlaces = mGooglePlaceClient.execute(params[0]);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             return null;
@@ -148,7 +135,5 @@ public class LocationActivity extends MapActivity {
                     .setAdapter(new ArrayAdapter<EntryPlace>(mContext, android.R.layout.simple_list_item_1, mPlaces));
         }
     }
-
-    // private static final String TAG = "LocationActivity";
 
 }

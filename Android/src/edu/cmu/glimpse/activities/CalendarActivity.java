@@ -3,16 +3,12 @@ package edu.cmu.glimpse.activities;
 import java.util.Calendar;
 import java.util.List;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -24,17 +20,10 @@ import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.CalendarView.OnDateChangeListener;
 import android.widget.ListView;
-
-import com.facebook.model.GraphObject;
-import com.facebook.model.GraphUser;
-
 import edu.cmu.glimpse.entry.GlimpseEntryPreview;
 import edu.cmu.glimpse.sqlite.GlimpseDataSource;
 
 public class CalendarActivity extends Activity {
-    private static final String TAG = "CalendarActivity";
-
-    private GraphUser mFacebookUser;
     private CalendarView mCalendarView;
     private Button mNewEntryButton;
     private ListView mListView;
@@ -52,14 +41,6 @@ public class CalendarActivity extends Activity {
 
         mDataSource = new GlimpseDataSource(this);
         mSelectedDate = Calendar.getInstance();
-
-        String facebookUserString = getIntent().getStringExtra("facebookUser");
-        try {
-            mFacebookUser = GraphObject.Factory.create(new JSONObject(facebookUserString), GraphUser.class);
-        } catch (JSONException e) {
-            Log.w(TAG, "Get facebook user failed");
-            e.printStackTrace();
-        }
 
         mCalendarView = (CalendarView) findViewById(R.id.calendarView);
         mCalendarView.setOnDateChangeListener(new OnDateChangeListener() {

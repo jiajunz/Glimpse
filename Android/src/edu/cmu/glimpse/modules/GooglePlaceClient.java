@@ -50,7 +50,7 @@ public class GooglePlaceClient {
                 JSONObject place = places.getJSONObject(i);
                 String name = place.getString("name");
                 String reference = place.getString("reference");
-                placeNames.add(new EntryPlace(name, reference));
+                placeNames.add(new EntryPlace(name, reference, location));
             }
         } catch (JSONException e) {
             // TODO Auto-generated catch block

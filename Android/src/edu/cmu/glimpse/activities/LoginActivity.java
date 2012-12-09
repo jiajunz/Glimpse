@@ -1,10 +1,17 @@
 package edu.cmu.glimpse.activities;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -33,18 +40,17 @@ import edu.cmu.glimpse.sqlite.GlimpseSQLiteHelper;
 public class LoginActivity extends FacebookActivity {
 
     private static final String TAG = "LoginActivity";
-    private static final String DB_NAME = "GlimpseDB";
-    private static final String DB_PATH = "/data/data/edu.cmu.glimpse.activities/databases/"
-            + GlimpseSQLiteHelper.DATABASE_NAME;
 
     private ImageView mLoadingImage;
     private AnimationDrawable mLoadingAnimation;
     private ImageView mLogoImageView;
     private LoginButton mFacebookLoginButton;
-    private GraphUser mUser;
+    private GraphUser mFacebookUser;
     private ImageButton mDropboxLoginButton;
     private DropboxSyncModule mDropboxSyncModule;
     private boolean mUserRequested = false;
+    private boolean mIsReturned = false;
+    private boolean mHasEntered = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,12 +63,12 @@ public class LoginActivity extends FacebookActivity {
         mLoadingImage = (ImageView) findViewById(R.id.login_loading_image);
         mLoadingImage.setBackgroundResource(R.drawable.loading_animation);
         mLoadingAnimation = (AnimationDrawable) mLoadingImage.getBackground();
-        mLoadingAnimation.start();
 
         mFacebookLoginButton = (LoginButton) findViewById(R.id.facebook_login_button);
+        mFacebookLoginButton.setPublishPermissions(Arrays.asList("publish_actions", "publish_checkins"));
 
         if (isSessionOpen()) {
-            if (mUser == null) {
+            if (mFacebookUser == null) {
                 requestUser();
             }
         } else {
@@ -76,16 +82,17 @@ public class LoginActivity extends FacebookActivity {
             public void onClick(View v) {
                 mDropboxSyncModule.authenticate();
             }
+
         });
 
         mLogoImageView = (ImageView) findViewById(R.id.logo_image_view);
         mLogoImageView.setOnClickListener(new OnClickListener() {
 
             public void onClick(View v) {
-                if (mUser != null) {
-                    // enter();
+                if (mFacebookUser != null && mDropboxSyncModule.isAuthenticated()) {
+                    enter();
                 } else {
-                    Log.w(TAG, "mUser == null !");
+                    Log.w(TAG, "user == null");
                 }
             }
 
@@ -100,7 +107,7 @@ public class LoginActivity extends FacebookActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (mDropboxSyncModule.isAuthenticated()) {
+        if (mFacebookUser != null && mDropboxSyncModule.isAuthenticated() && !mIsReturned) {
             enter();
         }
     }
@@ -124,35 +131,57 @@ public class LoginActivity extends FacebookActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mIsReturned = true;
+        mHasEntered = false;
+
         mLoadingImage.setVisibility(View.INVISIBLE);
         mFacebookLoginButton.setVisibility(View.VISIBLE);
-        mLogoImageView.setClickable(isSessionOpen() && mUser != null);
+        mLogoImageView.setClickable(isSessionOpen() && mFacebookUser != null);
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        Log.d(TAG, "save instance");
-        super.onSaveInstanceState(outState);
-        if (mUser != null) {
-            outState.putString("facebookUser", mUser.getInnerJSONObject().toString());
-        }
     }
 
     private synchronized void requestUser() {
         if (mUserRequested) {
             return;
-        } else {
-            mUserRequested = true;
         }
+        mUserRequested = true;
         Log.d(TAG, "request user");
         // make request to the /me API
         Request request = Request.newMeRequest(this.getSession(), new Request.GraphUserCallback() {
             // callback after Graph API response with user object
             public void onCompleted(GraphUser user, Response response) {
-                mUser = user;
-                if (user != null) {
-                    // enter();
+                mFacebookUser = user;
+
+                new AsyncTask<String, Void, Bitmap>() {
+
+                    @Override
+                    protected Bitmap doInBackground(String... userId) {
+                        try {
+                            URL image = new URL("http://graph.facebook.com/" + userId[0] + "/picture?type=large");
+                            Bitmap profileBitmap = BitmapFactory.decodeStream(image.openConnection().getInputStream());
+                            return profileBitmap;
+                        } catch (MalformedURLException e) {
+                            Log.w(TAG, "Fetch profile image failed");
+                        } catch (IOException e) {
+                            Log.w(TAG, "Fetch profile image failed");
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Bitmap profileBitmap) {
+                        if (profileBitmap == null) {
+                            return;
+                        }
+                        ImageView profileImage = (ImageView) findViewById(R.id.user_profile_image);
+                        profileImage.setVisibility(View.VISIBLE);
+                        profileImage.setImageBitmap(profileBitmap);
+                    }
+
+                }.execute(user.getId());
+
+                if (user != null && mDropboxSyncModule.isAuthenticated()) {
+                    enter();
                 }
             }
         });
@@ -161,7 +190,6 @@ public class LoginActivity extends FacebookActivity {
 
     private void gotAccount(AccountManager manager, Account account) {
         Log.d(TAG, "Got google account: " + account.name);
-        // manager.getAuthToken(account, "", null, this, new GetAuthTokenCallback(), null);
     }
 
     private void getGoogleAccount() {
@@ -170,17 +198,7 @@ public class LoginActivity extends FacebookActivity {
 
         if (accounts == null || accounts.length == 0) {
             // No login accounts found
-
-            ImageButton googleLoginButton = (ImageButton) findViewById(R.id.google_login_button);
-            googleLoginButton.setOnClickListener(new OnClickListener() {
-
-                public void onClick(View v) {
-                    // Intent intent = new Intent(LoginActivity.this, GoogleLoginActivity.class);
-                    // startActivityForResult(intent, GOOGLE_LOGIN_REQUEST);
-                    return;
-                }
-
-            });
+            Log.w(TAG, "No Google Accounts found");
         }
         if (accounts.length > 1) {
             // show dialog to choose one account
@@ -202,13 +220,20 @@ public class LoginActivity extends FacebookActivity {
 
     }
 
-    private void enter() {
+    private synchronized void enter() {
+        if (mHasEntered) {
+            return;
+        }
+        mHasEntered = true;
+        mLoadingImage.setVisibility(View.VISIBLE);
+        mLoadingAnimation.start();
+
         new AsyncTask<Void, Void, Void>() {
 
             @Override
             protected Void doInBackground(Void... params) {
                 Log.d(TAG, "start sync");
-                mDropboxSyncModule.syncContent(DB_NAME, DB_PATH);
+                mDropboxSyncModule.syncContent(GlimpseSQLiteHelper.DB_NAME, GlimpseSQLiteHelper.DB_PATH);
                 return null;
             }
 
@@ -237,11 +262,10 @@ public class LoginActivity extends FacebookActivity {
 
                     public void onAnimationEnd(Animation animation) {
                         Intent calendarIntent = new Intent(LoginActivity.this, CalendarActivity.class);
-                        calendarIntent.putExtra("facebookUser", mUser.getInnerJSONObject().toString());
+                        calendarIntent.putExtra("facebookUser", mFacebookUser.getInnerJSONObject().toString());
                         startActivityForResult(calendarIntent, 0);
                     }
                 });
-                // mLogoImageView.setAnimation(animation);
                 mLogoImageView.startAnimation(animation);
             }
 
